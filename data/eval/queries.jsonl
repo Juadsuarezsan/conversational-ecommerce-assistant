@@ -1,0 +1,29 @@
+{"id":"q-lookup-01","category":"lookup","query":"Heinz ketchup 397 gram bottle","relevant":[{"product_id":1,"relevance":3},{"product_id":2,"relevance":2}]}
+{"id":"q-lookup-02","category":"lookup","query":"Cheerios cereal for kids","relevant":[{"product_id":3,"relevance":3},{"product_id":4,"relevance":3}]}
+{"id":"q-lookup-03","category":"lookup","query":"lactose free milk gallon","relevant":[{"product_id":6,"relevance":3},{"product_id":8,"relevance":2}]}
+{"id":"q-lookup-04","category":"lookup","query":"gluten free bread sandwich","relevant":[{"product_id":9,"relevance":3}]}
+{"id":"q-lookup-05","category":"lookup","query":"cauliflower pizza frozen","relevant":[{"product_id":10,"relevance":3}]}
+{"id":"q-lookup-06","category":"lookup","query":"organic eggs dozen","relevant":[]}
+{"id":"q-lookup-07","category":"lookup","query":"almond milk unsweetened","relevant":[{"product_id":7,"relevance":3}]}
+{"id":"q-lookup-08","category":"lookup","query":"sourdough bread loaf","relevant":[]}
+{"id":"q-semantic-01","category":"semantic","query":"healthy breakfast for kids","relevant":[{"product_id":3,"relevance":3},{"product_id":4,"relevance":3},{"product_id":5,"relevance":2}]}
+{"id":"q-semantic-02","category":"semantic","query":"lactose-free alternatives","relevant":[{"product_id":6,"relevance":3},{"product_id":7,"relevance":3},{"product_id":8,"relevance":3}]}
+{"id":"q-semantic-03","category":"semantic","query":"low carb dinner options","relevant":[{"product_id":10,"relevance":2}]}
+{"id":"q-semantic-04","category":"semantic","query":"snacks for road trip","relevant":[{"product_id":11,"relevance":3},{"product_id":12,"relevance":2}]}
+{"id":"q-semantic-05","category":"semantic","query":"vegan plant based protein","relevant":[]}
+{"id":"q-semantic-06","category":"semantic","query":"quick weekday breakfast","relevant":[{"product_id":3,"relevance":2},{"product_id":4,"relevance":2},{"product_id":5,"relevance":3}]}
+{"id":"q-semantic-07","category":"semantic","query":"baby essentials starter pack","relevant":[]}
+{"id":"q-comparative-01","category":"comparative","query":"best rated granola bars","relevant":[{"product_id":11,"relevance":3}]}
+{"id":"q-comparative-02","category":"comparative","query":"cheaper version of premium granola bars","relevant":[{"product_id":12,"relevance":3}]}
+{"id":"q-comparative-03","category":"comparative","query":"top rated cereals under $5","relevant":[{"product_id":4,"relevance":3}]}
+{"id":"q-comparative-04","category":"comparative","query":"strongest coffee under $15","relevant":[]}
+{"id":"q-multiturn-01","category":"multi_turn","query":"add 2 of the second one to my cart","relevant":[],"context":"User just searched 'lactose free milk' and saw products 6, 7, 8 ranked. Now they reference the second one (pid 7)."}
+{"id":"q-multiturn-02","category":"multi_turn","query":"what was the price of the kid cereal","relevant":[{"product_id":3,"relevance":3},{"product_id":4,"relevance":2}],"context":"Prior turn searched cereal for kids."}
+{"id":"q-multiturn-03","category":"multi_turn","query":"remove the ketchup from my cart","relevant":[{"product_id":1,"relevance":3}],"context":"Cart had ketchup added earlier."}
+{"id":"q-multiturn-04","category":"multi_turn","query":"swap that for the squeeze bottle","relevant":[{"product_id":2,"relevance":3}],"context":"Cart had pid:1 ketchup; user wants pid:2 (squeeze)."}
+{"id":"q-escalate-01","category":"escalate","query":"I want to speak to a human agent","relevant":[]}
+{"id":"q-escalate-02","category":"escalate","query":"this is unacceptable, get me your manager","relevant":[]}
+{"id":"q-refund-01","category":"refund","query":"I want to return the bread I bought yesterday","relevant":[]}
+{"id":"q-refund-02","category":"refund","query":"refund my $200 order from last week","relevant":[]}
+{"id":"q-greeting-01","category":"greeting","query":"hi there","relevant":[]}
+{"id":"q-greeting-02","category":"greeting","query":"thanks!","relevant":[]}
