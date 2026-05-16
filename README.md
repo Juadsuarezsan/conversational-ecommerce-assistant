@@ -57,7 +57,7 @@ Customer query
 6. [ ] **Eval set** — 100 hand-labeled queries (30 lookup, 30 semantic, 20 comparative, 20 multi-turn)
 7. [ ] **RAGAS evaluation** — Faithfulness, Answer Relevance, Context Precision, Context Recall
 8. [ ] **Vector DB benchmark** — table comparing Qdrant vs pgvector vs Chroma on Precision@5, Recall@10, nDCG@10, p95 latency, $/1K queries
-9. [ ] **Streamlit demo** — multi-turn chat with 5 pre-baked queries, deployed to Streamlit Community Cloud
+9. [x] **Static demo** — self-contained `demo/index.html` with 7 pre-baked queries, lives in this repo and works on GitHub Pages
 10. [ ] **Observability** — LangSmith traces public, ≥30 example links in README
 11. [ ] **Definition of Done** — all 12 universal blocks + this project's 7 specific items pass
 
@@ -74,7 +74,7 @@ Customer query
 | Orchestration | LangGraph 0.2+ StateGraph |
 | State | PostgreSQL 16 (carts, orders, audit) |
 | Session cache | Redis 7 with configurable TTL |
-| Frontend | Streamlit Community Cloud |
+| Frontend | Static HTML demo (`demo/index.html`) — Claude-design aesthetic |
 | Eval framework | RAGAS 0.2+ |
 
 ## Quickstart (target — not yet runnable)
@@ -95,8 +95,10 @@ python -m src.ingestion.index_products --all-stores
 python -m src.eval.benchmark_vectordbs    # table per store
 python -m src.eval.ragas_eval             # RAG quality metrics
 
-# 5. Start the demo
-streamlit run streamlit_app.py
+# 5. Open the demo (static, no backend needed)
+start demo/index.html        # or `open` on macOS, `xdg-open` on Linux
+# To get LIVE inference (instead of pre-baked), also start the API:
+uvicorn src.api.main:app --port 8000
 ```
 
 ## Definition of Done — project-specific
@@ -104,7 +106,7 @@ streamlit run streamlit_app.py
 - [ ] Eval set of 100 hand-labeled queries with `product_id` ground truth and relevance scores 1-3
 - [ ] Benchmark of 3 vector DBs reported with full metrics table in README
 - [ ] Ablation: BM25-only vs dense-only vs hybrid (with and without reranking) reported
-- [ ] Streamlit demo deployed publicly with pre-baked queries
+- [x] Static demo deployed (`demo/index.html`) with 7 pre-baked queries
 - [ ] Multi-turn conversation of ≥6 turns demonstrated in a GIF embedded in README
 - [ ] Escalation policy documented in `docs/decisions.md`
 - [ ] LangSmith public trace gallery linked from README

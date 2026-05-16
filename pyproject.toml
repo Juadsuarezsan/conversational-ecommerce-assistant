@@ -37,8 +37,6 @@ dependencies = [
     # Eval
     "ragas==0.2.6",
     "datasets==3.0.1",
-    # Frontend (Streamlit + WebRTC for demo)
-    "streamlit==1.39.0",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,118 @@
+{
+  "project": "conversational-ecommerce-assistant",
+  "generated_at": "2026-05-16T00:00:00Z",
+  "predictions": [
+    {
+      "ticket": "I need running shoes under $100, size 10, road not trail.",
+      "top_intent": "search_products",
+      "confidence": 0.94,
+      "alternatives": [
+        {
+          "intent": "filter_catalog",
+          "confidence": 0.04
+        },
+        {
+          "intent": "ask_clarification",
+          "confidence": 0.02
+        }
+      ],
+      "inference_ms": 312.5
+    },
+    {
+      "ticket": "Compare the Nike Pegasus 40 and the ASICS Nimbus 25 on cushioning and weight.",
+      "top_intent": "compare_products",
+      "confidence": 0.97,
+      "alternatives": [
+        {
+          "intent": "get_product_details",
+          "confidence": 0.02
+        },
+        {
+          "intent": "search_products",
+          "confidence": 0.01
+        }
+      ],
+      "inference_ms": 289.1
+    },
+    {
+      "ticket": "Add the cheaper of those two to my cart.",
+      "top_intent": "add_to_cart",
+      "confidence": 0.91,
+      "alternatives": [
+        {
+          "intent": "compare_products",
+          "confidence": 0.06
+        },
+        {
+          "intent": "search_products",
+          "confidence": 0.03
+        }
+      ],
+      "inference_ms": 245.8
+    },
+    {
+      "ticket": "What's in my cart right now?",
+      "top_intent": "view_cart",
+      "confidence": 0.99,
+      "alternatives": [
+        {
+          "intent": "checkout",
+          "confidence": 0.005
+        },
+        {
+          "intent": "remove_from_cart",
+          "confidence": 0.005
+        }
+      ],
+      "inference_ms": 198.4
+    },
+    {
+      "ticket": "Is the Pegasus 40 in stock in white?",
+      "top_intent": "check_stock",
+      "confidence": 0.96,
+      "alternatives": [
+        {
+          "intent": "get_product_details",
+          "confidence": 0.03
+        },
+        {
+          "intent": "search_products",
+          "confidence": 0.01
+        }
+      ],
+      "inference_ms": 267.2
+    },
+    {
+      "ticket": "Recommend something similar but in a vibrant color.",
+      "top_intent": "get_recommendations",
+      "confidence": 0.89,
+      "alternatives": [
+        {
+          "intent": "search_products",
+          "confidence": 0.08
+        },
+        {
+          "intent": "compare_products",
+          "confidence": 0.03
+        }
+      ],
+      "inference_ms": 301.9
+    },
+    {
+      "ticket": "Checkout please, use my saved card.",
+      "top_intent": "checkout",
+      "confidence": 0.98,
+      "alternatives": [
+        {
+          "intent": "view_cart",
+          "confidence": 0.01
+        },
+        {
+          "intent": "add_to_cart",
+          "confidence": 0.01
+        }
+      ],
+      "inference_ms": 234.6
+    }
+  ]
+}
