@@ -3,7 +3,7 @@ name = "ecommerce-assistant"
 version = "0.1.0"
 description = "Conversational E-commerce Assistant — hybrid RAG over Instacart catalog"
 requires-python = ">=3.11,<3.14"
-authors = [{ name = "Juan David Suárez Sandoval", email = "juadsuarezsan@unal.edu.co" }]
+authors = [{ name = "Juan David Suárez Sánchez", email = "juadsuarezsan@unal.edu.co" }]
 license = { text = "MIT" }
 
 dependencies = [
