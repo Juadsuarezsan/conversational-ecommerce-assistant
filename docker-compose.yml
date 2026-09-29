@@ -1,3 +1,5 @@
+# Full stack: Postgres+pgvector, Qdrant, Redis, the API and the Streamlit UI.
+# Validation of `docker compose up` is pending (no Docker daemon in the dev sandbox).
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -45,6 +47,10 @@ services:
       DATABASE_URL: postgresql://ecommerce:ecommerce_dev@postgres:5432/ecommerce
       QDRANT_URL: http://qdrant:6333
       REDIS_URL: redis://redis:6379/0
+      VECTOR_STORE: ${VECTOR_STORE:-qdrant}
+      CART_BACKEND: ${CART_BACKEND:-postgres}
+      SESSION_BACKEND: ${SESSION_BACKEND:-redis}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8501}
     depends_on:
       postgres: { condition: service_healthy }
       qdrant:   { condition: service_started }

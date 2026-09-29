@@ -1,6 +1,10 @@
+-- Schema for the Conversational E-commerce Assistant (PostgreSQL 16 + pgvector).
+-- Extensions must exist before any index that uses their operator classes.
 CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
--- Product catalog (denormalized for query speed). Source: Instacart `products.csv`.
+-- Product catalog (denormalized for query speed). Source: Instacart `products.csv`
+-- joined with aisles/departments, plus price/rating enrichments.
 CREATE TABLE IF NOT EXISTS products (
     product_id      INTEGER PRIMARY KEY,
     product_name    TEXT NOT NULL,
@@ -18,12 +22,11 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE INDEX IF NOT EXISTS products_aisle_idx ON products (aisle_id);
 CREATE INDEX IF NOT EXISTS products_dept_idx  ON products (department_id);
+CREATE INDEX IF NOT EXISTS products_price_idx ON products (price_usd);
 CREATE INDEX IF NOT EXISTS products_name_trgm ON products USING gin (product_name gin_trgm_ops);
 -- ivfflat over 1024-dim embeddings. lists=100 is reasonable for 50K rows.
 CREATE INDEX IF NOT EXISTS products_embedding_idx
     ON products USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
-
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Sessions, carts, orders for the conversational state
 CREATE TABLE IF NOT EXISTS sessions (
@@ -39,7 +42,8 @@ CREATE TABLE IF NOT EXISTS cart_items (
     session_id      TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
     product_id      INTEGER NOT NULL REFERENCES products(product_id),
     quantity        INTEGER NOT NULL CHECK (quantity > 0),
-    added_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    added_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (session_id, product_id)
 );
 CREATE INDEX IF NOT EXISTS cart_items_session_idx ON cart_items (session_id);
 
@@ -57,6 +61,7 @@ CREATE INDEX IF NOT EXISTS orders_user_idx ON orders (user_id, placed_at DESC);
 CREATE TABLE IF NOT EXISTS audit_log (
     id              BIGSERIAL PRIMARY KEY,
     session_id      TEXT NOT NULL,
+    trace_id        TEXT,
     turn            INTEGER NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     intent          TEXT NOT NULL,
@@ -66,6 +71,8 @@ CREATE TABLE IF NOT EXISTS audit_log (
     response        TEXT,
     escalated       BOOLEAN NOT NULL DEFAULT FALSE,
     latency_ms      INTEGER,
+    input_tokens    INTEGER,
+    output_tokens   INTEGER,
     cost_usd        NUMERIC(8, 5)
 );
 CREATE INDEX IF NOT EXISTS audit_log_session_idx ON audit_log (session_id, turn);
