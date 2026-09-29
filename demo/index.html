@@ -1,519 +1,237 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Conversational E-Commerce Assistant — Live Demo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%237c5cff'/%3E%3C/svg%3E" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grocery Assistant Demo</title>
+<meta name="description" content="Conversational e-commerce assistant: hybrid retrieval + LangGraph cart agent. Pre-baked cases produced by the repository code in deterministic mode; live mode calls POST /api/chat.">
 <style>
-:root {
-    --bg: #07090f;
-    --bg-elev: #0d1220;
-    --bg-card: #12141c;
-    --bg-card-hover: #161924;
-    --border: rgba(255,255,255,0.08);
-    --border-strong: rgba(255,255,255,0.14);
-    --text: #e7ecf5;
-    --text-dim: #9aa3b8;
-    --text-faint: #5a5f6e;
-    --accent: #7c5cff;
-    --accent-2: #22d3ee;
-    --accent-3: #f472b6;
-    --success: #34d399;
-    --warning: #fbbf24;
-    --danger: #ff5a72;
-    --radius: 14px;
-    --radius-sm: 8px;
-    --max-w: 1180px;
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #14181f; --muted: #5b6472; --line: #e3e6eb;
+    --accent: #0f6e56; --accent-ink: #ffffff; --user: #e8f1ff; --bot: #f1f3f6; --warn: #b54708; --warn-bg: #fff4e5;
+    --chip: #eef2f6; --radius: 12px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216; --panel: #171b21; --ink: #e8ebef; --muted: #9aa4b1; --line: #2a303a;
+      --accent: #3ccf9a; --accent-ink: #0b1a14; --user: #1c2a3f; --bot: #1f242c; --warn: #f5a35b; --warn-bg: #3a2410; --chip: #232a34;
+    }
   }
-  code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
-  a { color: inherit; text-decoration: none; }
-  ::selection { background: var(--accent); color: white; }
-  .bg-stage {
-    position: fixed; inset: 0; z-index: -2; pointer-events: none;
-    background:
-      radial-gradient(1200px 700px at 80% -10%, rgba(124,92,255,0.22), transparent 60%),
-      radial-gradient(1000px 600px at -10% 30%, rgba(34,211,238,0.16), transparent 60%),
-      radial-gradient(900px 500px at 50% 110%, rgba(244,114,182,0.16), transparent 55%),
-      linear-gradient(180deg, #06070d 0%, #0a0e1c 100%);
+  :root[data-theme="dark"] {
+    --bg: #0f1216; --panel: #171b21; --ink: #e8ebef; --muted: #9aa4b1; --line: #2a303a;
+    --accent: #3ccf9a; --accent-ink: #0b1a14; --user: #1c2a3f; --bot: #1f242c; --warn: #f5a35b; --warn-bg: #3a2410; --chip: #232a34;
   }
-  .bg-grid {
-    position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 0%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 0%, transparent 75%);
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 16px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  header h1 { font-size: 18px; margin: 0; }
+  header .sub { color: var(--muted); font-size: 13px; flex-basis: 100%; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--chip); font-size: 12px; color: var(--muted); }
+  .badge.live { background: var(--accent); color: var(--accent-ink); }
+  main { display: grid; grid-template-columns: 260px 1fr 260px; gap: 16px; padding: 16px; max-width: 1280px; margin: 0 auto; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; min-width: 0; }
+  .panel h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .cases button { display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 10px 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 10px; cursor: pointer; font: inherit; }
+  .cases button:hover { border-color: var(--accent); }
+  .cases button small { display: block; color: var(--muted); font-size: 12px; }
+  .cases button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .cases button.primary small { color: var(--accent-ink); opacity: .85; }
+  #chat { display: flex; flex-direction: column; min-height: 60vh; }
+  #log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+  .msg { max-width: 92%; padding: 10px 12px; border-radius: 12px; overflow-wrap: anywhere; }
+  .msg.user { align-self: flex-end; background: var(--user); }
+  .msg.bot { align-self: flex-start; background: var(--bot); }
+  .msg .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .msg .meta .badge.esc { background: var(--warn-bg); color: var(--warn); }
+  .products { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; }
+  .products li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-top: 1px dashed var(--line); }
+  .products li span:last-child { color: var(--muted); white-space: nowrap; }
+  form { display: flex; gap: 8px; margin-top: 12px; }
+  input[type=text] { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; }
+  button.send { padding: 10px 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font: inherit; cursor: pointer; }
+  .cart ul { list-style: none; padding: 0; margin: 0; }
+  .cart li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .total { margin-top: 8px; font-weight: 600; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .live-box { margin-top: 12px; display: grid; gap: 6px; }
+  .live-box label { font-size: 12px; color: var(--muted); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error { background: var(--warn-bg); color: var(--warn); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 16px; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; padding: 12px; }
+    .msg { max-width: 100%; }
   }
-  .cursor-glow {
-    position: fixed; top: 0; left: 0; width: 500px; height: 500px; z-index: -1;
-    background: radial-gradient(circle, rgba(124,92,255,0.22), transparent 55%);
-    border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%);
-    transition: opacity 0.4s ease;
-    mix-blend-mode: screen;
+  @media (max-width: 420px) {
+    main { padding: 8px; gap: 10px; }
+    header { padding: 12px; }
+    .panel { padding: 10px; }
+    form { flex-direction: column; }
+    button.send { width: 100%; }
   }
-  @media (max-width: 900px) { .cursor-glow { display: none; } }
-  nav {
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    background: rgba(8,9,14,0.72);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner {
-    max-width: var(--max-w);
-    margin: 0 auto;
-    padding: 14px 24px;
-    display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  }
-  .logo {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600; font-size: 13px;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .logo-text {
-    background: linear-gradient(90deg, var(--accent-2), var(--accent));
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .logo-dot {
-    width: 8px; height: 8px;
-    background: var(--accent); border-radius: 50%;
-    box-shadow: 0 0 12px var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.85); }
-  }
-  .nav-cta {
-    padding: 8px 16px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    font-size: 13px; font-weight: 500;
-    transition: all 0.2s;
-  }
-  .nav-cta:hover { border-color: var(--accent); background: rgba(124,92,255,0.08); }
-  .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
-  header { padding: 80px 0 40px; text-align: center; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-dim);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    margin-bottom: 24px;
-  }
-  .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); }
-  h1 {
-    font-size: clamp(36px, 5vw, 56px);
-    font-weight: 800; line-height: 1.05; letter-spacing: -0.02em;
-    margin-bottom: 18px;
-  }
-  h1 .grad {
-    background: linear-gradient(135deg, var(--accent-2) 0%, var(--accent) 60%, var(--accent-3) 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: 200% auto;
-    animation: shine 8s linear infinite;
-  }
-  @keyframes shine {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-  .subtitle {
-    color: var(--text-dim);
-    font-size: clamp(15px, 1.4vw, 18px);
-    max-width: 720px;
-    margin: 0 auto 36px;
-  }
-  .metric-row {
-    display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
-    margin: 36px 0 16px;
-  }
-  .metric { text-align: center; }
-  .metric-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 28px; font-weight: 700;
-    background: linear-gradient(90deg, var(--accent-2), var(--accent));
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .metric-label {
-    font-size: 11px; color: var(--text-dim);
-    text-transform: uppercase; letter-spacing: 0.12em;
-    margin-top: 4px;
-  }
-  section { padding: 48px 0; }
-  h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-  .section-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
-  .try-box {
-    background: linear-gradient(180deg, rgba(124,92,255,0.06), rgba(34,211,238,0.04));
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    padding: 28px;
-    margin-bottom: 36px;
-  }
-  .try-box label {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-dim);
-    letter-spacing: 0.12em; text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .try-box textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .try-box textarea:focus { border-color: var(--accent); }
-  .try-box-actions {
-    display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; align-items: center;
-  }
-  .btn {
-    padding: 10px 20px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 14px; font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn:hover { border-color: var(--accent); background: rgba(124,92,255,0.08); }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    border-color: transparent;
-    color: white;
-  }
-  .btn-primary:hover { box-shadow: 0 6px 24px rgba(124,92,255,0.4); }
-  .api-hint {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-faint);
-    margin-left: auto;
-  }
-  .api-hint code { color: var(--text-dim); }
-  .live-result {
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg-card);
-    display: none;
-  }
-  .live-result.show { display: block; }
-  .live-result .intent-pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 14px;
-    background: rgba(124,92,255,0.16);
-    border: 1px solid var(--accent);
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; color: var(--accent);
-  }
-  .live-result .confidence {
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; margin-left: 10px;
-  }
-  .alt-list { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .alt-chip {
-    padding: 4px 10px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-dim);
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 16px;
-  }
-  .card {
-    padding: 20px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-card);
-    transition: all 0.25s;
-    cursor: pointer;
-  }
-  .card:hover {
-    border-color: var(--accent);
-    background: var(--bg-card-hover);
-    transform: translateY(-2px);
-  }
-  .card .ticket {
-    font-size: 14px; color: var(--text);
-    margin-bottom: 16px; line-height: 1.5;
-  }
-  .card .ticket::before { content: '"'; color: var(--text-faint); margin-right: 2px; }
-  .card .ticket::after  { content: '"'; color: var(--text-faint); margin-left: 2px; }
-  .card .meta {
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-  }
-  .card .intent {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--accent);
-  }
-  .card .conf {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-dim);
-  }
-  .card .conf .bar {
-    display: inline-block;
-    width: 50px; height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-left: 6px;
-    vertical-align: middle;
-    overflow: hidden;
-  }
-  .card .conf .bar > span {
-    display: block; height: 100%;
-    background: linear-gradient(90deg, var(--accent-2), var(--accent));
-  }
-  .card .latency {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: var(--text-faint);
-    margin-top: 8px;
-  }
-  .arch-section {
-    margin-top: 64px;
-    padding: 32px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-card);
-  }
-  .arch-flow {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; line-height: 2;
-    color: var(--text-dim);
-    background: var(--bg);
-    padding: 20px;
-    border-radius: var(--radius-sm);
-    overflow-x: auto;
-    white-space: pre;
-    border: 1px solid var(--border);
-  }
-  .arch-flow .key { color: var(--accent-2); }
-  .arch-flow .val { color: var(--text); }
-  .arch-flow .note { color: var(--text-faint); }
-  footer {
-    padding: 60px 0 40px;
-    text-align: center;
-    color: var(--text-faint);
-    font-size: 13px;
-    border-top: 1px solid var(--border);
-    margin-top: 80px;
-  }
-  footer a { color: var(--text-dim); border-bottom: 1px dotted var(--text-faint); }
-  footer a:hover { color: var(--accent-2); }
-
 </style>
 </head>
 <body>
-<div class="bg-stage"></div>
-<div class="bg-grid"></div>
-<div class="cursor-glow" id="cursorGlow"></div>
+<header>
+  <h1>Conversational E-commerce Assistant</h1>
+  <span id="mode" class="badge">pre-baked</span>
+  <a href="https://github.com/Juadsuarezsan/conversational-ecommerce-assistant">GitHub repo</a>
+  <span class="sub">Hybrid retrieval (BM25 + dense + RRF + rerank + filters) and a LangGraph cart agent over a synthetic Instacart-like catalog. Pre-baked replies were produced by this repository's code in <strong>deterministic fallback mode (no LLM)</strong>; switch to live mode to call <code>POST /api/chat</code>.</span>
+</header>
 
-<nav>
-  <div class="nav-inner">
-    <a href="../" class="logo">
-      <span class="logo-dot"></span>
-      <span class="logo-text">CONVERSATIONAL·ECOMMERCE·ASSISTANT</span>
-    </a>
-    <a href="https://github.com/Juadsuarezsan/conversational-ecommerce-assistant" class="nav-cta" target="_blank" rel="noopener">Repo →</a>
-  </div>
-</nav>
-
-<div class="container">
-  <header>
-    <div class="eyebrow"><span class="eyebrow-dot"></span> LangGraph · 6 tools · OpenAI-spec function calls</div>
-    <h1>An agentic shopper that searches, compares,<br/><span class="grad">and checks out for you.</span></h1>
-    <p class="subtitle">Multi-turn LangGraph agent that grounds product queries in a real catalog, calls 6 tools (search, compare, cart, recommend, stock, checkout), and recovers from tool failures.</p>
-    <div class="metric-row"><div class="metric"><div class="metric-value">0.92</div><div class="metric-label">Task success</div></div><div class="metric"><div class="metric-value">6</div><div class="metric-label">Tools available</div></div><div class="metric"><div class="metric-value">4.2</div><div class="metric-label">Avg turns</div></div><div class="metric"><div class="metric-value">2.1 s</div><div class="metric-label">Median E2E</div></div></div>
-  </header>
-
-  <section>
-    <h2>Try it yourself</h2>
-    <p class="section-sub">Type an input. If the project's FastAPI backend is running on <code>localhost:8000</code>, this calls it live; otherwise it shows the nearest pre-baked example.</p>
-    <div class="try-box">
-      <label for="ticket-input">Input</label>
-      <textarea id="ticket-input" placeholder="I need running shoes under $100, size 10, road not trail."></textarea>
-      <div class="try-box-actions">
-        <button class="btn btn-primary" id="classify-btn">Run →</button>
-        <button class="btn" id="random-btn">Try a random example</button>
-        <span class="api-hint">backend: <code>http://localhost:8000</code></span>
-      </div>
-      <div class="live-result" id="live-result"></div>
+<main>
+  <section class="panel">
+    <h2>Pre-baked cases</h2>
+    <div class="cases" id="cases"></div>
+    <div class="note" id="baked-meta"></div>
+    <div class="live-box">
+      <label><input type="checkbox" id="live"> Live mode (call the API)</label>
+      <input type="text" id="api" value="http://localhost:8000" aria-label="API base URL">
+      <span class="note">Start the backend with <code>uvicorn src.api.main:app</code> and set <code>CORS_ORIGINS</code> to this page's origin.</span>
     </div>
   </section>
 
-  <section>
-    <h2>Pre-baked examples</h2>
-    <p class="section-sub">Real inputs the project handles, with outputs captured ahead of time. Click any card to drop it into the try-box above.</p>
-    <div class="grid" id="cards-grid"></div>
+  <section class="panel" id="chat">
+    <h2>Conversation</h2>
+    <div id="log"></div>
+    <div id="status" class="note"></div>
+    <form id="form">
+      <input type="text" id="input" placeholder="e.g. lactose free milk gallon" maxlength="2000" autocomplete="off">
+      <button class="send" type="submit">Send</button>
+    </form>
   </section>
 
-  <section>
-    <div class="arch-section">
-      <h2>Pipeline</h2>
-      <p class="section-sub">How an input becomes a decision.</p>
-      <div class="arch-flow"><span class="key">in:</span>  <span class="val">user message</span>
-  <span class="note">↓</span>
-<span class="key">step 1:</span>  <span class="val">intent router (Claude Sonnet) — chat / search / cart / checkout</span>
-  <span class="note">↓</span>
-<span class="key">step 2:</span>  <span class="val">LangGraph state machine selects tool</span>
-  <span class="note">↓</span>
-<span class="key">step 3:</span>  <span class="val">tool execution (Qdrant catalog · cart store · payments stub)</span>
-  <span class="note">↓</span>
-<span class="key">step 4:</span>  <span class="val">Claude composes response from tool outputs</span>
-  <span class="note">↓</span>
-<span class="key">step 5:</span>  <span class="val">memory append (session state)</span>
-  <span class="note">↓</span>
-<span class="key">out:</span>  <span class="val">assistant reply + UI actions</span></div>
-    </div>
-  </section>
-</div>
-
-<footer>
-  Part of <a href="https://juadsuarezsan.github.io/ai-portfolio/">the Juan David Suárez portfolio</a> ·
-  <a href="https://github.com/Juadsuarezsan/conversational-ecommerce-assistant">Source code</a>
-</footer>
+  <aside class="panel cart">
+    <h2>Cart</h2>
+    <ul id="cart"></ul>
+    <div class="total" id="total">Total $0.00</div>
+    <div class="note">Cart operations are parsed from the message: add, remove, change quantity, view, clear. References like "the second one" resolve against the previous result list.</div>
+  </aside>
+</main>
+<footer>Product ids are cited as [pid:N]. Prices and ratings are synthetic. Catalog: 213 products, seed 20260516.</footer>
 
 <script>
-  const cursorGlow = document.getElementById('cursorGlow');
-  document.addEventListener('mousemove', (e) => {
-    cursorGlow.style.left = e.clientX + 'px';
-    cursorGlow.style.top = e.clientY + 'px';
-  });
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let baked = null;
+  let sessionId = "demo-" + Math.random().toString(36).slice(2, 10);
+  const tokenize = (s) => (s.toLowerCase().match(/[a-z0-9]+/g) || []);
+  const money = (x) => (x == null ? "—" : "$" + Number(x).toFixed(2));
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 
-  let predictions = [];
-  const API_BASE = 'http://localhost:8000';
-
-  fetch('predictions.json').then(r => r.json()).then(data => {
-    predictions = data.predictions;
-    renderCards();
-  });
-
-  function renderCards() {
-    const grid = document.getElementById('cards-grid');
-    grid.innerHTML = '';
-    predictions.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      const confPct = Math.round(p.confidence * 100);
-      card.innerHTML = `
-        <div class="ticket">${escapeHtml(p.ticket)}</div>
-        <div class="meta">
-          <span class="intent">${escapeHtml(p.top_intent)}</span>
-          <span class="conf">${confPct}%<span class="bar"><span style="width:${confPct}%"></span></span></span>
-        </div>
-        <div class="latency">latency: ${p.inference_ms.toFixed(0)} ms · alt: ${p.alternatives.map(a => a.intent).join(' · ')}</div>
-      `;
-      card.addEventListener('click', () => {
-        document.getElementById('ticket-input').value = p.ticket;
-        document.getElementById('ticket-input').scrollIntoView({behavior: 'smooth', block: 'center'});
-      });
-      grid.appendChild(card);
+  function renderCart(items) {
+    const ul = $("cart"); ul.innerHTML = "";
+    let total = 0;
+    (items || []).forEach((c) => {
+      total += c.unit_price_usd * c.quantity;
+      const li = document.createElement("li");
+      li.innerHTML = `<span>[pid:${c.product_id}] ${escapeHtml(c.product_name)} x ${c.quantity}</span><span>${money(c.unit_price_usd * c.quantity)}</span>`;
+      ul.appendChild(li);
     });
+    $("total").textContent = "Total " + money(total);
   }
 
-  document.getElementById('classify-btn').addEventListener('click', classifyLive);
-  document.getElementById('random-btn').addEventListener('click', () => {
-    if (!predictions.length) return;
-    const p = predictions[Math.floor(Math.random() * predictions.length)];
-    document.getElementById('ticket-input').value = p.ticket;
-  });
+  function addUser(text) {
+    const d = document.createElement("div"); d.className = "msg user"; d.textContent = text; $("log").appendChild(d);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
 
-  async function classifyLive() {
-    const text = document.getElementById('ticket-input').value.trim();
-    const result = document.getElementById('live-result');
-    if (!text) {
-      result.innerHTML = '<span style="color:var(--warning)">Please enter some text first.</span>';
-      result.classList.add('show');
-      return;
+  function addBot(r, source) {
+    const d = document.createElement("div"); d.className = "msg bot";
+    let html = `<div>${escapeHtml(r.response)}</div>`;
+    if (r.retrieved_products && r.retrieved_products.length) {
+      html += `<ul class="products">` + r.retrieved_products.slice(0, 5).map((p) =>
+        `<li><span>[pid:${p.product_id}] ${escapeHtml(p.product_name)} <small>(${escapeHtml(p.aisle)})</small></span><span>${money(p.price_usd)}${p.avg_rating ? " · ★" + p.avg_rating : ""}</span></li>`).join("") + `</ul>`;
     }
-    result.innerHTML = '<span style="color:var(--text-dim)">Running…</span>';
-    result.classList.add('show');
-
-    try {
-      const r = await fetch(`${API_BASE}/api/classify`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({text}),
-      });
-      if (!r.ok) throw new Error('backend non-200');
-      const data = await r.json();
-      renderLive(data, true);
-    } catch (e) {
-      const fallback = nearestBakedMatch(text);
-      renderLive(fallback, false);
-    }
+    html += `<div class="meta"><span class="badge">intent: ${escapeHtml(r.intent)}</span>` +
+      (r.cart_action ? `<span class="badge">cart: ${escapeHtml(r.cart_action)}</span>` : "") +
+      (r.escalated ? `<span class="badge esc">escalated to human</span>` : "") +
+      `<span class="badge">${r.latency_ms} ms</span>` +
+      `<span class="badge">${r.llm_used ? "LLM" : "no LLM (fallback)"}</span>` +
+      `<span class="badge">${escapeHtml(source)}</span></div>`;
+    d.innerHTML = html; $("log").appendChild(d);
+    $("log").scrollTop = $("log").scrollHeight;
+    renderCart(r.cart_snapshot);
   }
 
-  function renderLive(d, isLive) {
-    const result = document.getElementById('live-result');
-    const confPct = Math.round(d.confidence * 100);
-    const alts = (d.alternatives || []).map(a =>
-      `<span class="alt-chip">${escapeHtml(a.intent)} (${Math.round(a.confidence*100)}%)</span>`).join('');
-    result.innerHTML = `
-      <div>
-        <span class="intent-pill">→ ${escapeHtml(d.top_intent)}</span>
-        <span class="confidence">${confPct}% confident · ${d.inference_ms ? d.inference_ms.toFixed(0) + ' ms' : 'cached'}</span>
-      </div>
-      <div class="alt-list">${alts}</div>
-      <div style="margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-faint)">
-        ${isLive ? 'source: live POST /api/classify' : 'source: nearest pre-baked example (start the backend for live inference)'}
-      </div>
-    `;
-  }
-
-  function nearestBakedMatch(text) {
-    const lo = text.toLowerCase();
-    let best = predictions[0]; let bestScore = -1;
-    predictions.forEach(p => {
-      const tokens = new Set(p.ticket.toLowerCase().split(/\W+/).filter(Boolean));
-      const myTok = new Set(lo.split(/\W+/).filter(Boolean));
-      let overlap = 0;
-      myTok.forEach(t => { if (tokens.has(t)) overlap++; });
-      if (overlap > bestScore) { bestScore = overlap; best = p; }
+  function nearestCase(text) {
+    const q = new Set(tokenize(text));
+    let best = null, bestScore = 0;
+    baked.single_cases.forEach((c) => {
+      const t = new Set(tokenize(c.message));
+      let overlap = 0; q.forEach((w) => { if (t.has(w)) overlap++; });
+      if (overlap > bestScore) { bestScore = overlap; best = c; }
     });
     return best;
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function sendLive(text) {
+    const base = $("api").value.replace(/\/$/, "");
+    $("status").innerHTML = `<span class="spinner"></span> calling ${escapeHtml(base)}/api/chat …`;
+    try {
+      const res = await fetch(`${base}/api/chat`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({session_id: sessionId, user_id: "demo-user", message: text}),
+      });
+      if (!res.ok) { const body = await res.text(); throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`); }
+      const r = await res.json();
+      $("status").textContent = "";
+      addBot(r, "live POST /api/chat");
+    } catch (err) {
+      $("status").innerHTML = `<div class="error">Request failed: ${escapeHtml(err.message)}. Is the API running and CORS_ORIGINS set?</div>`;
+    }
   }
+
+  function sendBaked(text) {
+    const c = nearestCase(text);
+    if (!c) { $("status").innerHTML = `<div class="error">No pre-baked case matches; start the API for live answers.</div>`; return; }
+    $("status").textContent = "";
+    addBot(c, c.message === text ? "pre-baked" : `nearest pre-baked: "${c.message}"`);
+  }
+
+  function replayConversation() {
+    $("log").innerHTML = ""; renderCart([]);
+    let i = 0;
+    const step = () => {
+      if (i >= baked.conversation.length) return;
+      const t = baked.conversation[i++];
+      addUser(t.message); addBot(t, "pre-baked turn " + i);
+      setTimeout(step, 350);
+    };
+    step();
+  }
+
+  $("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = $("input").value.trim(); if (!text) return;
+    $("input").value = ""; addUser(text);
+    if ($("live").checked) sendLive(text); else sendBaked(text);
+  });
+  $("live").addEventListener("change", () => {
+    $("mode").textContent = $("live").checked ? "live" : "pre-baked";
+    $("mode").className = "badge" + ($("live").checked ? " live" : "");
+    sessionId = "demo-" + Math.random().toString(36).slice(2, 10);
+    $("log").innerHTML = ""; renderCart([]);
+  });
+
+  fetch("predictions.json").then((r) => r.json()).then((data) => {
+    baked = data;
+    const box = $("cases");
+    const replay = document.createElement("button"); replay.className = "primary";
+    replay.innerHTML = `Replay the ${data.conversation.length}-turn conversation<small>greeting → search → add → add → remove → view → refund</small>`;
+    replay.addEventListener("click", replayConversation); box.appendChild(replay);
+    data.single_cases.forEach((c) => {
+      const b = document.createElement("button");
+      b.innerHTML = `${escapeHtml(c.title)}<small>${escapeHtml(c.message)}</small>`;
+      b.addEventListener("click", () => { addUser(c.message); if ($("live").checked) sendLive(c.message); else addBot(c, "pre-baked"); });
+      box.appendChild(b);
+    });
+    $("baked-meta").textContent = `Generated ${data.generated_at} from commit ${data.git_sha} · ${data.mode}`;
+    replayConversation();
+  }).catch(() => { $("status").innerHTML = `<div class="error">predictions.json could not be loaded; serve this folder over HTTP (e.g. python -m http.server).</div>`; });
+})();
 </script>
 </body>
 </html>

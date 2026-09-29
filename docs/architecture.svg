@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #4b5563; stroke-width: 1.2; rx: 8; }
+      .node { fill: #ecfdf5; stroke: #0f6e56; stroke-width: 1.2; rx: 8; }
+      .store { fill: #eff6ff; stroke: #1d4ed8; stroke-width: 1.2; rx: 8; }
+      .ext { fill: #fff7ed; stroke: #c2410c; stroke-width: 1.2; rx: 8; stroke-dasharray: 4 3; }
+      .title { font-weight: 600; font-size: 14px; fill: #111827; }
+      .t { fill: #111827; }
+      .m { fill: #4b5563; font-size: 11px; }
+      .edge { stroke: #4b5563; stroke-width: 1.2; fill: none; marker-end: url(#arrow); }
+      .group { fill: none; stroke: #9ca3af; stroke-dasharray: 5 4; rx: 12; }
+    </style>
+  </defs>
+  <rect width="960" height="600" fill="#f9fafb"/>
+  <text x="24" y="30" class="title" font-size="17">Conversational E-commerce Assistant — request path</text>
+  <text x="24" y="50" class="m">Solid: always on. Dashed: optional external services (each has a deterministic fallback selected by env vars).</text>
+
+  <!-- Client -->
+  <rect x="24" y="90" width="150" height="56" class="box"/>
+  <text x="99" y="114" text-anchor="middle" class="t">Client</text>
+  <text x="99" y="132" text-anchor="middle" class="m">demo/index.html · Streamlit</text>
+
+  <!-- API -->
+  <rect x="214" y="80" width="190" height="76" class="box"/>
+  <text x="309" y="104" text-anchor="middle" class="t">FastAPI  src/api/main.py</text>
+  <text x="309" y="122" text-anchor="middle" class="m">POST /api/chat · /api/cart · /health</text>
+  <text x="309" y="140" text-anchor="middle" class="m">CORS (env) · slowapi · Pydantic 422</text>
+  <path d="M174,118 L214,118" class="edge"/>
+
+  <!-- Session cache -->
+  <rect x="444" y="80" width="170" height="56" class="store"/>
+  <text x="529" y="104" text-anchor="middle" class="t">Session cache</text>
+  <text x="529" y="122" text-anchor="middle" class="m">Redis (TTL) | in-memory</text>
+  <path d="M404,108 L444,108" class="edge"/>
+
+  <!-- LangGraph group -->
+  <rect x="24" y="190" width="590" height="200" class="group"/>
+  <text x="36" y="210" class="title">LangGraph StateGraph  src/agents/orchestrator.py</text>
+  <text x="36" y="226" class="m">state: message · history · last_products · intent · filters · cart · usage · trace_id — every node logs in/out</text>
+
+  <rect x="36" y="250" width="120" height="48" class="node"/>
+  <text x="96" y="270" text-anchor="middle" class="t">classify_intent</text>
+  <text x="96" y="286" text-anchor="middle" class="m">Claude JSON | keywords</text>
+  <path d="M309,156 L309,180 L96,180 L96,250" class="edge"/>
+
+  <rect x="196" y="238" width="130" height="34" class="node"/>
+  <text x="261" y="260" text-anchor="middle" class="t">retrieve_products</text>
+  <rect x="196" y="280" width="130" height="34" class="node"/>
+  <text x="261" y="302" text-anchor="middle" class="t">cart_ops</text>
+  <rect x="196" y="322" width="130" height="34" class="node"/>
+  <text x="261" y="344" text-anchor="middle" class="t">refund_policy</text>
+  <rect x="346" y="238" width="120" height="34" class="node"/>
+  <text x="406" y="260" text-anchor="middle" class="t">order_lookup</text>
+  <rect x="346" y="280" width="120" height="34" class="node"/>
+  <text x="406" y="302" text-anchor="middle" class="t">escalate_to_human</text>
+
+  <path d="M156,274 L196,255" class="edge"/>
+  <path d="M156,274 L196,297" class="edge"/>
+  <path d="M156,274 L196,339" class="edge"/>
+  <path d="M156,274 L346,255" class="edge"/>
+  <path d="M156,274 L346,297" class="edge"/>
+
+  <rect x="486" y="250" width="116" height="48" class="node"/>
+  <text x="544" y="270" text-anchor="middle" class="t">synthesize</text>
+  <text x="544" y="286" text-anchor="middle" class="m">Claude | template</text>
+  <path d="M326,255 L486,270" class="edge"/>
+  <path d="M326,297 L486,276" class="edge"/>
+  <path d="M326,339 L486,282" class="edge"/>
+  <path d="M466,255 L486,266" class="edge"/>
+  <path d="M466,297 L486,278" class="edge"/>
+  <text x="36" y="376" class="m">refund_policy: escalate if amount &gt; $100 or department in {alcohol, tobacco, pharmacy, babies}. cart_ops resolves "the second one", "the almond milk", "make that 3".</text>
+
+  <!-- Retrieval group -->
+  <rect x="24" y="420" width="590" height="160" class="group"/>
+  <text x="36" y="440" class="title">Hybrid retrieval  src/retrieval/</text>
+  <rect x="36" y="456" width="110" height="44" class="box"/>
+  <text x="91" y="474" text-anchor="middle" class="t">BM25</text>
+  <text x="91" y="490" text-anchor="middle" class="m">rank-bm25, top 20</text>
+  <rect x="160" y="456" width="120" height="44" class="box"/>
+  <text x="220" y="474" text-anchor="middle" class="t">Dense top 20</text>
+  <text x="220" y="490" text-anchor="middle" class="m">embed query · store</text>
+  <rect x="294" y="456" width="90" height="44" class="box"/>
+  <text x="339" y="474" text-anchor="middle" class="t">RRF k=60</text>
+  <text x="339" y="490" text-anchor="middle" class="m">fused top 20</text>
+  <rect x="398" y="456" width="100" height="44" class="box"/>
+  <text x="448" y="474" text-anchor="middle" class="t">Rerank top 10</text>
+  <text x="448" y="490" text-anchor="middle" class="m">Cohere | CE | lexical</text>
+  <rect x="512" y="456" width="94" height="44" class="box"/>
+  <text x="559" y="474" text-anchor="middle" class="t">Filters</text>
+  <text x="559" y="490" text-anchor="middle" class="m">price · rating · sort</text>
+  <path d="M146,478 L160,478" class="edge"/>
+  <path d="M280,478 L294,478" class="edge"/>
+  <path d="M384,478 L398,478" class="edge"/>
+  <path d="M498,478 L512,478" class="edge"/>
+  <path d="M261,272 L261,420" class="edge"/>
+  <text x="36" y="530" class="m">Structured retriever: same filter compiled to parametrised SQL on Postgres (PgStructuredRetriever) or applied in memory; used when no</text>
+  <text x="36" y="546" class="m">semantic candidate satisfies the constraint ("zzqx under $2"). Eval: python -m eval.run scores bm25 / dense / hybrid / rerank on 100 hand-labelled queries.</text>
+
+  <!-- Stores -->
+  <rect x="650" y="190" width="286" height="150" class="group"/>
+  <text x="662" y="210" class="title">Stores (env-selected)</text>
+  <rect x="662" y="222" width="262" height="30" class="store"/>
+  <text x="793" y="242" text-anchor="middle" class="t">Vectors: Qdrant | pgvector | Chroma | in-memory</text>
+  <rect x="662" y="260" width="262" height="30" class="store"/>
+  <text x="793" y="280" text-anchor="middle" class="t">Carts/orders/audit: Postgres pool | in-memory</text>
+  <rect x="662" y="298" width="262" height="30" class="store"/>
+  <text x="793" y="318" text-anchor="middle" class="t">Catalog: Instacart CSV | synthetic (seed 20260516)</text>
+  <path d="M614,478 L640,478 L640,237 L662,237" class="edge"/>
+  <path d="M326,297 L630,297 L630,275 L662,275" class="edge"/>
+
+  <!-- External -->
+  <rect x="650" y="370" width="286" height="210" class="group"/>
+  <text x="662" y="390" class="title">External APIs (timeouts + tenacity, mocked in tests)</text>
+  <rect x="662" y="402" width="262" height="40" class="ext"/>
+  <text x="793" y="419" text-anchor="middle" class="t">Anthropic claude-sonnet-4-5-20250929</text>
+  <text x="793" y="434" text-anchor="middle" class="m">intent router + synthesizer · fallback: keywords + templates</text>
+  <rect x="662" y="450" width="262" height="40" class="ext"/>
+  <text x="793" y="467" text-anchor="middle" class="t">Voyage AI voyage-3 (1024-d)</text>
+  <text x="793" y="482" text-anchor="middle" class="m">fallback: MiniLM (ml extra) | hash embeddings</text>
+  <rect x="662" y="498" width="262" height="40" class="ext"/>
+  <text x="793" y="515" text-anchor="middle" class="t">Cohere rerank-english-v3.0</text>
+  <text x="793" y="530" text-anchor="middle" class="m">fallback: ms-marco cross-encoder | lexical overlap</text>
+  <rect x="662" y="546" width="262" height="28" class="ext"/>
+  <text x="793" y="565" text-anchor="middle" class="t">LangSmith tracing (LANGSMITH_API_KEY) · loguru trace_id, tokens, cost_usd</text>
+  <path d="M602,274 L640,274 L640,422 L662,422" class="edge"/>
+</svg>

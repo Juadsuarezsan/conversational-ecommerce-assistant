@@ -1,7 +1,12 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ecommerce-assistant"
-version = "0.1.0"
-description = "Conversational E-commerce Assistant — hybrid RAG over Instacart catalog"
+version = "0.2.0"
+description = "Conversational E-commerce Assistant — hybrid RAG (BM25 + dense + RRF + rerank) with a LangGraph cart agent"
+readme = "README.md"
 requires-python = ">=3.11,<3.14"
 authors = [{ name = "Juan David Suárez Sánchez", email = "juadsuarezsan@unal.edu.co" }]
 license = { text = "MIT" }
@@ -15,31 +20,41 @@ dependencies = [
     "httpx==0.27.2",
     "tenacity==9.0.0",
     "loguru==0.7.2",
+    "slowapi==0.1.9",
     # LLM
     "anthropic==0.39.0",
     "langchain-anthropic==0.2.4",
     "langchain-core==0.3.15",
     "langgraph==0.2.45",
-    # Embeddings (free + paid options)
-    "sentence-transformers==3.2.1",
+    # Paid embedding / rerank providers (clients only; keys are optional)
     "voyageai==0.3.2",
+    "cohere==5.11.4",
     # Retrieval
     "rank-bm25==0.2.2",
     "qdrant-client==1.12.0",
     "chromadb==0.5.13",
     "pgvector==0.3.6",
-    # Databases
+    # Databases / cache
     "psycopg[binary,pool]==3.2.3",
     "redis==5.1.1",
     # Data
     "pandas==2.2.3",
-    "pyarrow==17.0.0",
-    # Eval
-    "ragas==0.2.6",
-    "datasets==3.0.1",
 ]
 
 [project.optional-dependencies]
+# Local (free) neural embeddings + cross-encoder reranker. Pulls torch (~2-6 GB).
+ml = [
+    "sentence-transformers==3.2.1",
+]
+# RAGAS evaluation (requires ANTHROPIC_API_KEY at run time).
+ragas = [
+    "ragas==0.2.6",
+    "datasets==3.0.1",
+]
+# Streamlit front-end (streamlit_app.py).
+ui = [
+    "streamlit==1.39.0",
+]
 dev = [
     "pytest==8.3.3",
     "pytest-cov==5.0.0",
@@ -50,19 +65,34 @@ dev = [
     "black==24.10.0",
     "mypy==1.11.2",
     "types-redis==4.6.0.20241004",
+    "pandas-stubs==2.2.3.241009",
 ]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["notebooks", ".venv"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "C4", "UP", "RUF"]
-ignore = ["E501"]
+select = ["E", "F", "I", "B", "C4", "UP", "RUF", "D"]
+ignore = ["E501", "D203", "D213", "D107", "D105"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+"scripts/**" = ["D"]
+"eval/**" = ["D"]
+"streamlit_app.py" = ["D"]
 
 [tool.black]
 line-length = 100
 target-version = ["py311"]
+extend-exclude = "notebooks|\\.venv"
 
 [tool.mypy]
 strict = true
@@ -70,9 +100,20 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 addopts = "--strict-markers -ra"
+markers = ["slow: slower tests (embedded Chroma)"]
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
